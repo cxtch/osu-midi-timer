@@ -1,0 +1,8 @@
+{
+  "stream_threshold_ms": 125,
+  "extraData": "3,2,1,100,1,0",
+  "output": {
+    "bookmarks": true,
+    "timingPoints": true
+  }
+}
