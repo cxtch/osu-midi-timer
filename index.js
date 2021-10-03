@@ -27,7 +27,7 @@ midi.tracks[0].forEach(event => {
   }
   let tickLength = 60000 / (ticksPerBeat * bpm);
   offset += event.deltaTime * tickLength;
-  event.offset = offset;
+  event.offset = Math.round(offset); //rounding offsets to closest ms
 })
 let notes = midi.tracks[0].filter(note => (note.subtype === "noteOn"));
 if (mp3Offset) {
@@ -39,19 +39,25 @@ let bpmByOffset = (a, b) => {
   return 60000 / (Math.abs(a - b) * beatsnapDivider)
 }
 let timingPoints = [];
+notes = notes.filter((note, index) => {
+  let previous = notes[index - 1]
+  if (previous) {
+    return note.offset - previous.offset > config.ignore_treshhold_ms
+  }
+  return true
+})
 notes.forEach((note, index) => {
   let obj = {
     offset: note.offset,
-    bpm: index === 0 ? 120 : bpmByOffset(note.offset, notes[index - 1].offset)
+    bpm: index === notes.length - 1 ? timingPoints[index - 1].bpm : bpmByOffset(note.offset, notes[index + 1].offset)
   }
   timingPoints.push(obj)
 })
-let maxBpm = 400;
-timingPoints = timingPoints.filter(point => point.bpm < maxBpm);
+
 let output = '';
 if (config.output.bookmarks) {
   output += 'Bookmarks: '
-  timingPoints.forEach(point => output += `${point.offset},`)
+  timingPoints.forEach(point => output += `${point.offset.toFixed(0)},`)
   output = output.replace(/,$/, '\r\n')
 }
 let extraData = config.extraData // extra data from .osu file
